@@ -1,0 +1,34 @@
+<Gesture Name="line" Subject="test" Speed="test" NumPts="30" Milliseconds="0" AppName="NDollarRecognizer-java" AppVer="1.0" Date="09/30/2011" TimeOfDay="10:42:02">
+<Stroke index="1">
+<Point X="104.0" Y="194.0" T="0" />
+<Point X="105.0" Y="194.0" T="0" />
+<Point X="108.0" Y="194.0" T="0" />
+<Point X="111.0" Y="193.0" T="0" />
+<Point X="116.0" Y="193.0" T="0" />
+<Point X="120.0" Y="193.0" T="0" />
+<Point X="128.0" Y="193.0" T="0" />
+<Point X="135.0" Y="193.0" T="0" />
+<Point X="145.0" Y="193.0" T="0" />
+<Point X="153.0" Y="193.0" T="0" />
+<Point X="162.0" Y="193.0" T="0" />
+<Point X="171.0" Y="193.0" T="0" />
+<Point X="181.0" Y="193.0" T="0" />
+<Point X="192.0" Y="193.0" T="0" />
+<Point X="203.0" Y="193.0" T="0" />
+<Point X="216.0" Y="193.0" T="0" />
+<Point X="226.0" Y="193.0" T="0" />
+<Point X="239.0" Y="193.0" T="0" />
+<Point X="248.0" Y="193.0" T="0" />
+<Point X="256.0" Y="193.0" T="0" />
+<Point X="264.0" Y="193.0" T="0" />
+<Point X="270.0" Y="193.0" T="0" />
+<Point X="276.0" Y="193.0" T="0" />
+<Point X="280.0" Y="193.0" T="0" />
+<Point X="283.0" Y="193.0" T="0" />
+<Point X="285.0" Y="192.0" T="0" />
+<Point X="286.0" Y="192.0" T="0" />
+<Point X="287.0" Y="192.0" T="0" />
+<Point X="287.0" Y="191.0" T="0" />
+<Point X="288.0" Y="191.0" T="0" />
+</Stroke>
+</Gesture>
