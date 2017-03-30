@@ -10,11 +10,14 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.mapeditor.screen.*;
 
-public class MyGdxGame extends ApplicationAdapter {
+public class MapEditor extends ApplicationAdapter {
 	SpriteBatch batch;
 	ShapeRenderer shape;
 
 	Screen screen;
+	public static ScreenEditor editor;
+	
+	public static boolean hasFocus = true;
 
 	@Override
 	public void create() {
@@ -26,7 +29,8 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.graphics.setWindowedMode(320*2, 288*2);
 		
 		try {
-			screen = new ScreenEditor();
+			editor = new ScreenEditor();
+			screen = editor;
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -34,6 +38,17 @@ public class MyGdxGame extends ApplicationAdapter {
 		
 	}
 
+	@Override
+	public void pause() {
+		hasFocus = false;
+	}
+	
+	
+	@Override
+	public void resume() {
+		hasFocus = true;
+	}
+	
 	@Override
 	public void render() {
 		Gdx.gl.glClearColor(0, 0, 0, 1);

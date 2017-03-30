@@ -4,16 +4,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-import javax.swing.JFileChooser;
-
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
-import com.mapeditor.game.MyGdxGame;
+import com.mapeditor.game.FileOppener;
+import com.mapeditor.game.MapEditor;
 import com.mapeditor.map.Map;
 import com.mapeditor.map.Tileset;
 
@@ -47,6 +45,7 @@ public class ScreenEditor extends Screen {
 
 	private int waitTouch;
 	private TextureRegion[] numbers;
+	private FileOppener f;
 
 	public ScreenEditor() throws FileNotFoundException {
 		super();
@@ -79,8 +78,48 @@ public class ScreenEditor extends Screen {
 	@Override
 	public void update() throws FileNotFoundException {
 
-		int mx = MyGdxGame.mx();
-		int my = MyGdxGame.my();
+		if (f != null && f.isShowing()) {
+
+			if (MapEditor.hasFocus)
+				f.setAlwaysOnTop(true);
+			else
+				f.setAlwaysOnTop(false);
+
+			if (f.fHandle != null) {
+				if (f.type == "tiles") {
+					String s = f.fHandle.name().replace(".xml", "");
+					File f = new File(".\\maps\\tilesets\\" + s + ".xml");
+
+					map.loadTiles(s);
+					map.tileset = new Tileset(s, map.tiles.length);
+					FileInputStream fh2 = new FileInputStream(f);
+					map.tileset.Load(fh2);
+				} else if (f.type == "tileset") {
+
+					String s = f.fHandle.name().replace(".png", "");
+					File dir2 = new File(".\\maps\\tilesets\\" + s + ".xml");
+					if (!dir2.exists()) {
+						map.loadTiles(s);
+						System.out.println(s);
+						map.tileset = new Tileset(s, map.tiles.length);
+						map.tileset.Save();
+					} else {
+						map.loadTiles(s);
+						map.tileset = new Tileset(s, map.tiles.length);
+						FileInputStream f = new FileInputStream(dir2);
+						map.tileset.Load(f);
+					}
+				} else {
+					map.Load(f.fHandle);
+				}
+				f.dispose();
+			}
+
+			return;
+		}
+
+		int mx = MapEditor.mx();
+		int my = MapEditor.my();
 
 		if (Gdx.input.isTouched()) {
 			waitTouch++;
@@ -125,19 +164,9 @@ public class ScreenEditor extends Screen {
 						}
 						if (mx >= 24 * 10 && mx < 24 * 10 + 24) {
 							if (waitTouch == 1) {
-								JFileChooser fc = new JFileChooser();
-								File dir = new File(".\\maps");
-								fc.setCurrentDirectory(dir);
 
-								fc.setVisible(true);
+								f = new FileOppener("map");
 
-								int returnVal = fc.showOpenDialog(null);
-
-								if (returnVal == JFileChooser.APPROVE_OPTION) {
-									File file = fc.getSelectedFile();
-									FileHandle fh = new FileHandle(file);
-									map.Load(fh);
-								}
 							}
 
 						}
@@ -214,59 +243,18 @@ public class ScreenEditor extends Screen {
 						if (waitTouch == 1) {
 
 							map.tileset.Save();
-
-							JFileChooser fc = new JFileChooser();
-							File dir = new File(".\\tilesets");
-							fc.setCurrentDirectory(dir);
-
-							fc.setVisible(true);
-
-							int returnVal = fc.showOpenDialog(null);
-
-							if (returnVal == JFileChooser.APPROVE_OPTION) {
-								File file = fc.getSelectedFile();
-								FileHandle fh = new FileHandle(file);
-
-								String s = fh.name().replace(".png", "");
-								File dir2 = new File(".\\maps\\tilesets\\" + s + ".xml");
-								if (!dir2.exists()) {
-									map.loadTiles(s);
-									System.out.println(s);
-									map.tileset = new Tileset(s, map.tiles.length);
-									map.tileset.Save();
-								} else {
-									map.loadTiles(s);
-									map.tileset = new Tileset(s, map.tiles.length);
-									FileInputStream f = new FileInputStream(dir2);
-									map.tileset.Load(f);
-								}
-							}
+							
+							
+							f = new FileOppener("tileset");
+							
 						}
 					} else if (my >= 24 * 7 && my < 24 * 8) {
 						if (waitTouch == 1) {
 
 							map.tileset.Save();
 
-							JFileChooser fc = new JFileChooser();
-							File dir = new File(".\\maps\\tilesets");
-							fc.setCurrentDirectory(dir);
+							f = new FileOppener("tiles");
 
-							fc.setVisible(true);
-
-							int returnVal = fc.showOpenDialog(null);
-
-							if (returnVal == JFileChooser.APPROVE_OPTION) {
-								File file = fc.getSelectedFile();
-								FileHandle fh = new FileHandle(file);
-
-								String s = fh.name().replace(".xml", "");
-								File f = new File(".\\maps\\tilesets\\" + s + ".xml");
-
-								map.loadTiles(s);
-								map.tileset = new Tileset(s, map.tiles.length);
-								FileInputStream fh2 = new FileInputStream(f);
-								map.tileset.Load(fh2);
-							}
 						}
 					} else if (my >= 24 * 6 && my < 24 * 7) {
 						tile_editor_mode = 0;
@@ -338,8 +326,8 @@ public class ScreenEditor extends Screen {
 	@Override
 	public void render(SpriteBatch batch) {
 
-		int mx = MyGdxGame.mx();
-		int my = MyGdxGame.my();
+		int mx = MapEditor.mx();
+		int my = MapEditor.my();
 		int tx = (mx / 16) * 16;
 		int ty = (my / 16) * 16;
 
