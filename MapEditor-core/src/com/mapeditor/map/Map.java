@@ -2,6 +2,7 @@ package com.mapeditor.map;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -35,7 +36,7 @@ public class Map {
 
 	public TextureRegion[] tiles;
 
-	public Map() {
+	public Map() throws FileNotFoundException {
 		width = 20;
 		height = 15;
 
@@ -45,7 +46,11 @@ public class Map {
 
 		loadTiles("tiles");
 
-		tileset = new Tileset("tiles", tiles.length);
+		
+		File dir2 = new File(".\\maps\\tilesets\\" + "tiles" + ".xml");
+		FileInputStream f = new FileInputStream(dir2);
+		
+		tileset = new Tileset(f,"tiles");
 
 		tileset.Save();
 

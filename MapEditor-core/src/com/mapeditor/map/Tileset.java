@@ -31,6 +31,12 @@ public class Tileset {
 		region = new int[max];
 	}
 
+	public Tileset(FileInputStream fh, String s) {
+		name = s;
+		Load(fh);
+	}
+
+	
 	public boolean Save() {
 		final String NAMESPACE = null;
 		final String VERSION = "1.0";
@@ -132,7 +138,7 @@ public class Tileset {
 	}
 
 	public boolean Load(FileInputStream fileHandle) {
-
+		
 		boolean success = true;
 		MXParser reader = null;
 		try {
@@ -157,7 +163,7 @@ public class Tileset {
 			while (tag != XmlPullParser.END_DOCUMENT) {
 				if (tag == XmlPullParser.START_TAG) {
 					final String n = reader.getName();
-					if (n.equals("layers")) {
+					if (n.equals("tiles")) {
 						for (int i = 0; i < reader.getAttributeCount(); ++i) {
 							String s = reader.getAttributeName(i);
 							if (s.equals("max")) {

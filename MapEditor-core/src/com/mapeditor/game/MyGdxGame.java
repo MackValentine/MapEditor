@@ -1,5 +1,7 @@
 package com.mapeditor.game;
 
+import java.io.FileNotFoundException;
+
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
@@ -23,7 +25,12 @@ public class MyGdxGame extends ApplicationAdapter {
 
 		Gdx.graphics.setWindowedMode(320*2, 288*2);
 		
-		screen = new ScreenEditor();
+		try {
+			screen = new ScreenEditor();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 
@@ -32,7 +39,12 @@ public class MyGdxGame extends ApplicationAdapter {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-		screen.update();
+		try {
+			screen.update();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 		batch.begin();
 		screen.render(batch);
