@@ -49,7 +49,7 @@ public class Tileset {
 			int i = 0;
 			do {
 				filename = "new" + (i++);
-				f = new File("maps/tilesets/" + filename + ".xml");
+				f = new File("data/tilesets/" + filename + ".xml");
 
 			} while (f.exists());
 
@@ -65,7 +65,7 @@ public class Tileset {
 					.newInstance(System.getProperty(XmlPullParserFactory.PROPERTY_NAME), null);
 			writer = factory.newSerializer();
 
-			osw = new OutputStreamWriter(new FileOutputStream("maps/tilesets/" + filename + ".xml"));
+			osw = new OutputStreamWriter(new FileOutputStream("data/tilesets/" + filename + ".xml"));
 			writer.setOutput(osw);
 			writer.startTag(NAMESPACE, "Tileset");
 			writer.attribute(NAMESPACE, "Name", filename);

@@ -7,6 +7,9 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 
 public abstract class Screen {
 
+	public static final int Width = 480;
+	public static final int Height = 270;
+	
 	public abstract void update() throws FileNotFoundException;
 
 	public abstract void render(SpriteBatch batch);

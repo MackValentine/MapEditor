@@ -16,18 +16,17 @@ public class MapEditor extends ApplicationAdapter {
 
 	Screen screen;
 	public static ScreenEditor editor;
-	
+
 	public static boolean hasFocus = true;
 
 	@Override
 	public void create() {
-		
-		
+
 		batch = new SpriteBatch();
 		shape = new ShapeRenderer();
 
-		Gdx.graphics.setWindowedMode(320*2, 288*2);
-		
+		Gdx.graphics.setWindowedMode((Screen.Width + 216 + 32) * 2, (Screen.Height + 48 + 32) * 2);
+
 		try {
 			editor = new ScreenEditor();
 			screen = editor;
@@ -35,20 +34,19 @@ public class MapEditor extends ApplicationAdapter {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 	@Override
 	public void pause() {
 		hasFocus = false;
 	}
-	
-	
+
 	@Override
 	public void resume() {
 		hasFocus = true;
 	}
-	
+
 	@Override
 	public void render() {
 		Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -70,14 +68,15 @@ public class MapEditor extends ApplicationAdapter {
 		shape.end();
 
 	}
-	
+
 	public static int mx() {
-		float fx = Gdx.graphics.getWidth() / 320.0f;
+		float fx = Gdx.graphics.getWidth() / (Screen.Width + 216);
 		int mx = (int) (Gdx.input.getX() / fx);
 		return mx;
 	}
+
 	public static int my() {
-		float fy = Gdx.graphics.getHeight() / 288.0f;
+		float fy = Gdx.graphics.getHeight() / (Screen.Height + 44);
 		int my = (int) ((Gdx.graphics.getHeight() - Gdx.input.getY()) / fy);
 		return my;
 	}

@@ -25,6 +25,8 @@ public class Map {
 
 	public String name;
 
+	public String parent_name = "";
+
 	public Tileset tileset;
 
 	public int width;
@@ -37,8 +39,8 @@ public class Map {
 	public TextureRegion[] tiles;
 
 	public Map() throws FileNotFoundException {
-		width = 20;
-		height = 15;
+		width = 30;
+		height = 16;
 
 		max_layer = 2;
 
@@ -46,11 +48,10 @@ public class Map {
 
 		loadTiles("tiles");
 
-		
-		File dir2 = new File(".\\maps\\tilesets\\" + "tiles" + ".xml");
+		File dir2 = new File(".\\data\\tilesets\\" + "tiles" + ".xml");
 		FileInputStream f = new FileInputStream(dir2);
-		
-		tileset = new Tileset(f,"tiles");
+
+		tileset = new Tileset(f, "tiles");
 
 		tileset.Save();
 
@@ -58,7 +59,7 @@ public class Map {
 
 	public Map(String string) {
 
-		Load(Gdx.files.internal("test.xml"));
+		Load(Gdx.files.internal("data/maps/"+string));
 
 	}
 
@@ -99,7 +100,7 @@ public class Map {
 			reader.setInput(fileHandle.read(), "UTF-8");
 
 			reader.nextTag();
-			//reader.require(XmlPullParser.START_TAG, null, null);
+			// reader.require(XmlPullParser.START_TAG, null, null);
 
 			if (reader.getName().equals("Map")) {
 				for (int i = 0; i < reader.getAttributeCount(); ++i) {
@@ -162,7 +163,7 @@ public class Map {
 								String m = reader.getAttributeValue(i);
 								loadTiles(reader.getAttributeValue(i));
 								tileset = new Tileset(m, tiles.length);
-								FileInputStream f = new FileInputStream("maps/tilesets/" + tileset.name + ".xml");
+								FileInputStream f = new FileInputStream("data/tilesets/" + tileset.name + ".xml");
 								tileset.Load(f);
 							}
 						}
@@ -190,8 +191,11 @@ public class Map {
 			File f;
 			int i = 0;
 			do {
-				filename = "new" + (i++) + ".xml";
-				f = new File("maps/" + filename);
+				String s = parent_name;
+				if (s != "")
+					s += "/";
+				filename = s + "map" + (i++) + ".xml";
+				f = new File("data/maps/" + filename);
 
 			} while (f.exists());
 
@@ -207,7 +211,7 @@ public class Map {
 					.newInstance(System.getProperty(XmlPullParserFactory.PROPERTY_NAME), null);
 			writer = factory.newSerializer();
 
-			osw = new OutputStreamWriter(new FileOutputStream("maps/" + filename));
+			osw = new OutputStreamWriter(new FileOutputStream("data/maps/" + filename));
 			writer.setOutput(osw);
 			writer.startTag(NAMESPACE, "Map");
 			writer.attribute(NAMESPACE, "Name", filename);

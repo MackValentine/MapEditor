@@ -54,19 +54,26 @@ public class FileOppener extends JDialog implements ActionListener {
 		File dir;
 
 		if (type == "tiles")
-			dir = new File(".\\maps\\tilesets");
+			dir = new File(".\\data\\tilesets");
 		else if (type == "tileset")
 			dir = new File(".\\tilesets");
 		else
-			dir = new File(".\\maps");
+			dir = new File(".\\data\\maps");
 
 		File[] ft = dir.listFiles();
 
 		list = new String[ft.length];
 
 		for (int i = 0; i < ft.length; ++i) {
-			if (ft[i].isFile()) {
-				list[i] = ft[i].getName();
+
+			if (type == "map") {
+				if (!ft[i].isFile()) {
+					list[i] = ft[i].getName();
+				}
+			} else {
+				if (ft[i].isFile()) {
+					list[i] = ft[i].getName();
+				}
 			}
 		}
 
@@ -119,11 +126,11 @@ public class FileOppener extends JDialog implements ActionListener {
 		if (fileName != null) {
 			FileHandle fileHandle;
 			if (type == "tiles")
-				fileHandle = new FileHandle("maps/tilesets/" + fileName);
+				fileHandle = new FileHandle("data/tilesets/" + fileName);
 			else if (type == "tileset")
 				fileHandle = new FileHandle("tilesets/" + fileName);
 			else
-				fileHandle = new FileHandle("maps/" + fileName);
+				fileHandle = new FileHandle("data/maps/" + fileName);
 			fHandle = fileHandle;
 		}
 		// map.Load(fh);
