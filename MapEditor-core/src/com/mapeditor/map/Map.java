@@ -17,9 +17,12 @@ import org.xmlpull.v1.XmlSerializer;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 
 public class Map {
+
+	public static boolean needRefresh = true;
 
 	public int[][][] layer;
 
@@ -38,13 +41,16 @@ public class Map {
 
 	public TextureRegion[] tiles;
 
+	public int[][] top;
+
 	public Map() throws FileNotFoundException {
 		width = 30;
 		height = 16;
 
-		max_layer = 2;
+		max_layer = 3;
 
 		layer = new int[max_layer][width][height];
+		top = new int[width][height];
 
 		loadTiles("tiles");
 
@@ -59,7 +65,7 @@ public class Map {
 
 	public Map(String string) {
 
-		Load(Gdx.files.internal("data/maps/"+string));
+		Load(Gdx.files.internal("data/maps/" + string));
 
 	}
 
@@ -78,21 +84,34 @@ public class Map {
 	public String to_s(int id) {
 		String s = "";
 
-		for (int j = 0; j < height; ++j) {
-			for (int i = 0; i < width; ++i) {
-				s += layer[id][i][j];
-				if (i < width - 1) {
-					s += ",";
+		if (id < 0) {
+			for (int j = 0; j < height; ++j) {
+				for (int i = 0; i < width; ++i) {
+					s += top[i][j];
+					if (i < width - 1) {
+						s += ",";
+					}
 				}
+				s += ";";
 			}
-			s += ";";
-		}
+		} else
+			for (int j = 0; j < height; ++j) {
+				for (int i = 0; i < width; ++i) {
+					s += layer[id][i][j];
+					if (i < width - 1) {
+						s += ",";
+					}
+				}
+				s += ";";
+			}
 
 		return s;
 	}
 
 	public boolean Load(FileHandle fileHandle) {
 
+		
+		
 		boolean success = true;
 		MXParser reader = null;
 		try {
@@ -155,6 +174,32 @@ public class Map {
 									}
 								}
 							}
+
+							if (s.equals("layer3")) {
+
+								layer[2] = new int[width][height];
+								String m = reader.getAttributeValue(i);
+								String[] m2 = m.split(";");
+								for (int j = 0; j < m2.length; ++j) {
+									String[] m3 = m2[j].split(",");
+									for (int l = 0; l < m3.length; ++l) {
+										layer[2][l][j] = Integer.valueOf(m3[l]);
+									}
+								}
+							}
+
+							if (s.equals("top")) {
+
+								top = new int[width][height];
+								String m = reader.getAttributeValue(i);
+								String[] m2 = m.split(";");
+								for (int j = 0; j < m2.length; ++j) {
+									String[] m3 = m2[j].split(",");
+									for (int l = 0; l < m3.length; ++l) {
+										top[l][j] = Integer.valueOf(m3[l]);
+									}
+								}
+							}
 						}
 					} else if (n.equals("tileset")) {
 						for (int i = 0; i < reader.getAttributeCount(); ++i) {
@@ -177,6 +222,8 @@ public class Map {
 		} finally {
 
 		}
+		
+		needRefresh = true;
 		return success;
 	}
 
@@ -235,6 +282,9 @@ public class Map {
 			writer.attribute(NAMESPACE, "height", Integer.toString(height));
 			writer.attribute(NAMESPACE, "layer1", to_s(0));
 			writer.attribute(NAMESPACE, "layer2", to_s(1));
+			writer.attribute(NAMESPACE, "layer3", to_s(2));
+
+			writer.attribute(NAMESPACE, "top", to_s(-1));
 
 			writer.endTag(NAMESPACE, "layers");
 			if (indentation)
@@ -254,6 +304,38 @@ public class Map {
 			success = false;
 		}
 		return success;
+	}
+
+	public void draw(SpriteBatch batch, int id, int i, int j, int m, int x, int y) {
+		if (id > 0 && id <= 7 && tileset.autotiles[id - 1] != null) {
+			int t[] = new int[8];
+
+			if (i + 1 < width)
+				t[0] = layer[m][i + 1][j];
+			if (i - 1 >= 0)
+				t[1] = layer[m][i - 1][j];
+
+			if (j + 1 < height)
+				t[2] = layer[m][i][j + 1];
+			if (j - 1 >= 0)
+				t[3] = layer[m][i][j - 1];
+
+			if (i + 1 < width && j + 1 < height)
+				t[4] = layer[m][i + 1][j + 1];
+			if (i + 1 < width && j - 1 >= 0)
+				t[5] = layer[m][i + 1][j - 1];
+
+			if (i - 1 >= 0 && j - 1 >= 0)
+				t[6] = layer[m][i - 1][j - 1];
+
+			if (i - 1 >= 0 && j + 1 < height)
+				t[7] = layer[m][i - 1][j + 1];
+			// tileset.autotiles[id - 1].render(batch, x, y, t);
+
+			tileset.autotiles[id - 1].render(batch, 16 * i + 16, 16 * j + 5 + 16, width, height, id, layer[m]);
+		} else {
+			batch.draw(tiles[id], x, y);
+		}
 	}
 
 }

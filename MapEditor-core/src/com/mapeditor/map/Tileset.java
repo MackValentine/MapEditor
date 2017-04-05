@@ -22,6 +22,8 @@ public class Tileset {
 
 	public int max;
 
+	public Autotile[] autotiles;
+
 	public Tileset(String n, int l) {
 		name = n;
 		max = l;
@@ -29,14 +31,37 @@ public class Tileset {
 		passability = new int[max];
 		depth = new int[max];
 		region = new int[max];
+
+		autotiles = new Autotile[7];
+
+		autotiles = new Autotile[7];
+		try {
+			autotiles[0] = new Autotile("test2", 1);
+			autotiles[1] = new Autotile("water", 2);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
 	public Tileset(FileInputStream fh, String s) {
 		name = s;
 		Load(fh);
+
+		autotiles = new Autotile[7];
+
+		autotiles = new Autotile[7];
+		try {
+			autotiles[0] = new Autotile("test2", 1);
+			autotiles[1] = new Autotile("water", 2);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 
-	
 	public boolean Save() {
 		final String NAMESPACE = null;
 		final String VERSION = "1.0";
@@ -138,7 +163,7 @@ public class Tileset {
 	}
 
 	public boolean Load(FileInputStream fileHandle) {
-		
+
 		boolean success = true;
 		MXParser reader = null;
 		try {

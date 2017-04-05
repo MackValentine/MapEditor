@@ -38,6 +38,8 @@ public class ScreenEditor extends Screen {
 	private int display_y;
 
 	private int index = 1;
+	private int[][] indexT;
+
 	private int layer = 0;
 	private int tool = 1;
 
@@ -48,10 +50,12 @@ public class ScreenEditor extends Screen {
 	private int waitTouch;
 	private TextureRegion[] numbers;
 	private FileOppener f;
-	private int animation;
+	public static int animation;
 	private int wait_anim;
 	private Texture windows;
 	private MapList listMap;
+	private int oldX;
+	private int oldY;
 
 	public ScreenEditor() throws FileNotFoundException {
 		super();
@@ -81,6 +85,32 @@ public class ScreenEditor extends Screen {
 
 		selector = new Texture("gfx/selector.png");
 		selector2 = new Texture("gfx/selector2.png");
+
+		FileHandle fh = new FileHandle("data/maps/new2/");
+		listMap = new MapList(fh);
+		listMap.index = 0;
+		map[0] = new Map(listMap.name + "/map" + listMap.index + ".xml");
+
+		for (int i = 1; i < 5; ++i) {
+			map[i] = null;
+		}
+
+		if (listMap.index < listMap.width) {
+			int i = listMap.index + 1;
+			map[1] = new Map(listMap.name + "/map" + i + ".xml");
+		}
+		if (listMap.index > 0) {
+			int i = listMap.index - 1;
+			map[2] = new Map(listMap.name + "/map" + i + ".xml");
+		}
+		if (listMap.index - 4 > 0) {
+			int i = listMap.index - 5;
+			map[3] = new Map(listMap.name + "/map" + i + ".xml");
+		}
+		if (listMap.index + 4 < listMap.width) {
+			int i = listMap.index + 4;
+			map[4] = new Map(listMap.name + "/map" + i + ".xml");
+		}
 
 	}
 
@@ -170,15 +200,72 @@ public class ScreenEditor extends Screen {
 								ty = map[0].height - 1;
 
 							if (Gdx.input.isButtonPressed(0)) {
-								if (tool == 1) {
-									map[0].layer[layer][tx][ty] = index;
-								} else if (tool == 2) {
-									paint(tx, ty, map[0].layer[layer][tx][ty]);
+
+								int t[][];
+								if (layer < 0) {
+									t = map[0].top;
 								} else {
-									map[0].layer[layer][tx][ty] = 0;
+									t = map[0].layer[layer];
 								}
+								if (tool == 1) {
+									if (indexT != null) {
+										for (int i = 0; i < indexT.length; ++i) {
+											for (int j = 0; j < indexT[i].length; ++j) {
+												int id = indexT[i][j];
+												if (tx + i < map[0].width && tx + i >= 0 && ty - j < map[0].height
+														&& ty - j >= 0)
+													t[tx + i][ty - j] = id;
+											}
+										}
+									} else {
+										t[tx][ty] = index;
+									}
+								} else if (tool == 2) {
+									paint(tx, ty, t[tx][ty]);
+								} else {
+									t[tx][ty] = 0;
+								}
+								Map.needRefresh = true;
+
 							} else {
-								index = map[0].layer[layer][tx][ty];
+								int t[][];
+								if (layer < 0) {
+									t = map[0].top;
+								} else {
+									t = map[0].layer[layer];
+								}
+								if (waitTouch > 1) {
+									int x = oldX;
+									int y = oldY;
+
+									int x2 = tx;
+									int y2 = ty;
+
+									if (x > x2) {
+										int k = x;
+										x = x2;
+										x2 = k;
+									}
+
+									if (y > y2) {
+										int k = y;
+										y = y2;
+										y2 = k;
+									}
+
+									indexT = new int[x2 - x + 1][y2 - y + 1];
+									for (int l = 0; l <= x2 - x; ++l) {
+										for (int l2 = 0; l2 <= y2 - y; ++l2) {
+											if (y2 - y - l2 < indexT[l].length)
+												indexT[l][y2 - y - l2] = t[x + l][y + l2];
+										}
+									}
+								} else {
+									index = t[tx][ty];
+									oldX = tx;
+									oldY = ty;
+									indexT = null;
+								}
 							}
 						}
 					} else if (my >= 32 + Screen.Height + 24 && my < 32 + Screen.Height + 48) {
@@ -190,17 +277,23 @@ public class ScreenEditor extends Screen {
 							layer = 0;
 						} else if (mx >= 48 + 24 && mx < 48 + 48) {
 							layer = 1;
+						} else if (mx >= 96 && mx < 96 + 24) {
+							layer = 2;
+						} else if (mx >= 96 + 24 && mx < 96 + 48) {
+							layer = -1;
+						} else if (mx >= 96 + 24 + 24 && mx < 96 + 48 + 24) {
+							layer = -2;
 						}
 
-						if (mx >= 96 && mx < 96 + 24) {
+						if (mx >= 96 + 48 + 48 && mx < 96 + 24 + 48 + 48) {
 							tool = 1;
-						} else if (mx >= 96 + 24 && mx < 96 + 48) {
+						} else if (mx >= 96 + 24 + 48 + 48 && mx < 96 + 48 + 48 + 48) {
 							tool = 2;
-						} else if (mx >= 96 + 48 && mx < 96 + 48 + 24) {
+						} else if (mx >= 96 + 48 + 48 + 48 && mx < 96 + 48 + 24 + 48 + 48) {
 							tool = 3;
 						}
 
-						if (mx >= 24 * 9 && mx < 24 * 9 + 24) {
+						if (mx >= 24 * 9 + 48 && mx < 24 * 9 + 24 + 48) {
 							if (map[0] != null) {
 								map[0].tileset.Save();
 							}
@@ -228,10 +321,8 @@ public class ScreenEditor extends Screen {
 								int i = listMap.index + 4;
 								map[4] = new Map(listMap.name + "/map" + i + ".xml");
 							}
-
-							// map = new Map();
 						}
-						if (mx >= 24 * 10 && mx < 24 * 10 + 24) {
+						if (mx >= 24 * 10 + 48 && mx < 24 * 10 + 24 + 48) {
 							if (waitTouch == 1) {
 								if (map[0] != null) {
 									map[0].tileset.Save();
@@ -241,7 +332,7 @@ public class ScreenEditor extends Screen {
 							}
 
 						}
-						if (mx >= 24 * 11 && mx < 24 * 11 + 24) {
+						if (mx >= 24 * 11 + 48 && mx < 24 * 11 + 24 + 48) {
 							if (map[0] != null) {
 								map[0].tileset.Save();
 								map[0].Save();
@@ -258,53 +349,88 @@ public class ScreenEditor extends Screen {
 						int tx = mx - Screen.Width - 32;
 						int ty = 24 * 8 - my - 8 + (display_y / 24) * 24;
 
-						if (tile_editor_mode == 0) {
-							if (tiles() != null) {
-								index = ((ty) / 24) * 8 + (tx / 24);
+						if (layer == -2) {
 
-								if (index >= tiles().length)
-									index = 0;
-								if (index < 0)
-									index = 0;
-							}
-						} else if (tile_editor_mode == 1) {
-							if (tiles() != null) {
-								int j = ((ty) / 24) * 8 + (tx / 24);
-								if (j < 0)
-									j = 0;
-								if (j >= tiles().length)
-									j = 0;
+						} else {
+							if (tile_editor_mode == 0) {
+								if (tiles() != null) {
+									int i = ((ty) / 24) * 8 + (tx / 24);
+									if (waitTouch > 1) {
+										if (index != i) {
+											int x = index % 8;
+											int y = index / 8;
 
-								if (waitTouch == 1) {
-									map[0].tileset.passability[j] = 1 - map[0].tileset.passability[j];
+											int x2 = i % 8;
+											int y2 = i / 8;
+
+											if (x > x2) {
+												int k = x;
+												x = x2;
+												x2 = k;
+											}
+
+											if (y > y2) {
+												int k = y;
+												y = y2;
+												y2 = k;
+											}
+
+											indexT = new int[x2 - x + 1][y2 - y + 1];
+											for (int l = 0; l <= x2 - x; ++l) {
+												for (int l2 = 0; l2 <= y2 - y; ++l2) {
+													indexT[l][l2] = (x + l) + (y + l2) * 8;
+												}
+											}
+										}
+									} else {
+										index = i;
+
+										indexT = null;// new int[][] { { i } };
+									}
+									if (index >= tiles().length)
+										index = 0;
+									if (index < 0)
+										index = 0;
 								}
-							}
-						} else if (tile_editor_mode == 2) {
-							if (tiles() != null) {
-								int j = ((ty) / 24) * 8 + (tx / 24);
-								if (j < 0)
-									j = 0;
-								if (j >= tiles().length)
-									j = 0;
+							} else if (tile_editor_mode == 1) {
+								if (tiles() != null) {
+									int j = ((ty) / 24) * 8 + (tx / 24);
+									if (j < 0)
+										j = 0;
+									if (j >= tiles().length)
+										j = 0;
 
-								if (waitTouch == 1) {
-									map[0].tileset.region[j] = 1 + map[0].tileset.region[j];
-									if (map[0].tileset.region[j] > 9)
-										map[0].tileset.region[j] = 0;
+									if (waitTouch == 1) {
+										map[0].tileset.passability[j] = 1 - map[0].tileset.passability[j];
+									}
 								}
-							}
-						} else if (tile_editor_mode == 3) {
-							if (tiles() != null) {
-								int j = ((ty) / 24) * 8 + (tx / 24);
-								if (j < 0)
-									j = 0;
-								if (j >= tiles().length)
-									j = 0;
+							} else if (tile_editor_mode == 2) {
+								if (tiles() != null) {
+									int j = ((ty) / 24) * 8 + (tx / 24);
+									if (j < 0)
+										j = 0;
+									if (j >= tiles().length)
+										j = 0;
 
-								if (waitTouch == 1) {
-									map[0].tileset.depth[j] = 1 + map[0].tileset.depth[j];
-									if (map[0].tileset.depth[j] > 9)
-										map[0].tileset.depth[j] = 0;
+									if (waitTouch == 1) {
+										map[0].tileset.region[j] = 1 + map[0].tileset.region[j];
+										if (map[0].tileset.region[j] > 9)
+											map[0].tileset.region[j] = 0;
+									}
+								}
+							} else if (tile_editor_mode == 3) {
+								if (tiles() != null) {
+									int j = ((ty) / 24) * 8 + (tx / 24);
+									if (j < 0)
+										j = 0;
+									if (j >= tiles().length)
+										j = 0;
+
+									if (waitTouch == 1) {
+										map[0].tileset.depth[j] = 1 + map[0].tileset.depth[j];
+										if (map[0].tileset.depth[j] > 9)
+											map[0].tileset.depth[j] = 0;
+									}
 								}
 							}
 						}
@@ -402,25 +528,48 @@ public class ScreenEditor extends Screen {
 	}
 
 	private void paint(int tx, int ty, int i) {
-		if (map[0].layer[layer][tx][ty] != index) {
-			map[0].layer[layer][tx][ty] = index;
-			if (tx + 1 < map[0].width)
-				if (map[0].layer[layer][tx + 1][ty] == i) {
-					paint(tx + 1, ty, i);
-				}
-			if (tx - 1 >= 0)
-				if (map[0].layer[layer][tx - 1][ty] == i) {
-					paint(tx - 1, ty, i);
-				}
+		if (layer < 0) {
+			if (map[0].top[tx][ty] != index) {
+				map[0].top[tx][ty] = index;
+				if (tx + 1 < map[0].width)
+					if (map[0].top[tx + 1][ty] == i) {
+						paint(tx + 1, ty, i);
+					}
+				if (tx - 1 >= 0)
+					if (map[0].top[tx - 1][ty] == i) {
+						paint(tx - 1, ty, i);
+					}
 
-			if (ty + 1 < map[0].height)
-				if (map[0].layer[layer][tx][ty + 1] == i) {
-					paint(tx, ty + 1, i);
-				}
-			if (ty - 1 >= 0)
-				if (map[0].layer[layer][tx][ty - 1] == i) {
-					paint(tx, ty - 1, i);
-				}
+				if (ty + 1 < map[0].height)
+					if (map[0].top[tx][ty + 1] == i) {
+						paint(tx, ty + 1, i);
+					}
+				if (ty - 1 >= 0)
+					if (map[0].top[tx][ty - 1] == i) {
+						paint(tx, ty - 1, i);
+					}
+			}
+		} else {
+			if (map[0].layer[layer][tx][ty] != index) {
+				map[0].layer[layer][tx][ty] = index;
+				if (tx + 1 < map[0].width)
+					if (map[0].layer[layer][tx + 1][ty] == i) {
+						paint(tx + 1, ty, i);
+					}
+				if (tx - 1 >= 0)
+					if (map[0].layer[layer][tx - 1][ty] == i) {
+						paint(tx - 1, ty, i);
+					}
+
+				if (ty + 1 < map[0].height)
+					if (map[0].layer[layer][tx][ty + 1] == i) {
+						paint(tx, ty + 1, i);
+					}
+				if (ty - 1 >= 0)
+					if (map[0].layer[layer][tx][ty - 1] == i) {
+						paint(tx, ty - 1, i);
+					}
+			}
 		}
 	}
 
@@ -436,45 +585,54 @@ public class ScreenEditor extends Screen {
 
 		batch.draw(backMiniMap, Screen.Width + 32, Screen.Height - 122 + 44 + 32);
 
+		wait_anim++;
+		if (wait_anim > 10) {
+			animation++;
+			wait_anim = 0;
+			Map.needRefresh = false;
+		}
 		Color c = batch.getColor();
 		batch.setColor(1f, 1f, 1f, 0.5f);
+
 		if (map[1] != null) {
 			for (int j = 0; j < map[1].height; ++j) {
 				int id = map[1].layer[0][0][j];
-				batch.draw(tiles(1)[id], map[0].width * 16 + 16, 16 * j + 5 + 16);
+				map[1].draw(batch, id, 0, j, 0, map[0].width * 16 + 16, 16 * j + 5 + 16);
 				id = map[1].layer[1][0][j];
-				batch.draw(tiles(1)[id], map[0].width * 16 + 16, 16 * j + 5 + 16);
+				map[1].draw(batch, id, 0, j, 1, map[0].width * 16 + 16, 16 * j + 5 + 16);
 			}
 		}
 
 		if (map[2] != null) {
 			for (int j = 0; j < map[2].height; ++j) {
 				int id = map[2].layer[0][map[2].width - 1][j];
-				batch.draw(tiles(2)[id], 0, 16 * j + 5 + 16);
+				map[2].draw(batch, id, map[2].width - 1, j, 0, 0, 16 * j + 5 + 16);
 				id = map[2].layer[1][map[2].width - 1][j];
-				batch.draw(tiles(2)[id], 0, 16 * j + 5 + 16);
+				map[2].draw(batch, id, map[2].width - 1, j, 1, 0, 16 * j + 5 + 16);
 			}
 		}
 
 		if (map[3] != null) {
 			for (int j = 0; j < map[3].width; ++j) {
 				int id = map[3].layer[0][j][0];
-				batch.draw(tiles(3)[id], 16 * j + 16, map[3].height * 16 + 16 + 5);
+				map[3].draw(batch, id, j, 0, 0, 16 * j + 16, map[3].height * 16 + 16 + 5);
 				id = map[3].layer[1][j][0];
-				batch.draw(tiles(3)[id], 16 * j + 16, map[3].height * 16 + 16 + 5);
+				map[3].draw(batch, id, j, 0, 1, 16 * j + 16, map[3].height * 16 + 16 + 5);
 			}
 		}
 		if (map[4] != null) {
 			for (int j = 0; j < map[4].width; ++j) {
 				int id = map[4].layer[0][j][map[4].height - 1];
-				batch.draw(tiles(4)[id], 16 * j + 16, 5);
+				map[4].draw(batch, id, j, map[4].height - 1, 0, 16 * j + 16, 5);
 				id = map[4].layer[1][j][map[4].height - 1];
-				batch.draw(tiles(4)[id], 16 * j + 16, 5);
+				map[4].draw(batch, id, j, map[4].height - 1, 1, 16 * j + 16, 5);
 			}
 		}
+
 		batch.setColor(c);
 
 		if (map[0] != null) {
+
 			c = batch.getColor();
 			if (layer != 0 && !tile_selector)
 				batch.setColor(1f, 1f, 1f, 0.5f);
@@ -482,16 +640,15 @@ public class ScreenEditor extends Screen {
 				for (int j = 0; j < map[0].height; ++j) {
 					int id = map[0].layer[0][i][j];
 					if ((i != tx / 16 || j != ty / 16) || layer != 0)
-						batch.draw(tiles()[id], 16 * i + 16, 16 * j + 5 + 16);
+						if (id > 0 && id <= 7 && map[0].tileset.autotiles[id - 1] != null) {
+							map[0].tileset.autotiles[id - 1].render(batch, i, j, map[0].width, map[0].height, id,
+									map[0].layer[0]);
+						} else {
+							batch.draw(tiles()[id], 16 * i + 16, 16 * j + 5 + 16);
+						}
 
 				}
 
-			}
-
-			wait_anim++;
-			if (wait_anim > 5) {
-				animation++;
-				wait_anim = 0;
 			}
 
 			batch.setColor(c);
@@ -502,10 +659,49 @@ public class ScreenEditor extends Screen {
 				for (int j = 0; j < map[0].height; ++j) {
 					int id = map[0].layer[1][i][j];
 					if ((i != tx / 16 || j != ty / 16) || layer != 1)
-						batch.draw(tiles()[id], 16 * i + 16, 16 * j + 5 + 16);
+						if (id > 0 && id <= 7 && map[0].tileset.autotiles[id - 1] != null) {
+							map[0].tileset.autotiles[id - 1].render(batch, i, j, map[0].width, map[0].height, id,
+									map[0].layer[1]);
+						} else {
+							batch.draw(tiles()[id], 16 * i + 16, 16 * j + 5 + 16);
+						}
 				}
 			}
 			batch.setColor(c);
+
+			if (layer != 2 && !tile_selector)
+				batch.setColor(1f, 1f, 1f, 0.5f);
+			for (int i = 0; i < map[0].width; ++i) {
+				for (int j = 0; j < map[0].height; ++j) {
+					int id = map[0].layer[2][i][j];
+					if ((i != tx / 16 || j != ty / 16) || layer != 2)
+						if (id > 0 && id <= 7 && map[0].tileset.autotiles[id - 1] != null) {
+
+							map[0].tileset.autotiles[id - 1].render(batch, i, j, map[0].width, map[0].height, id,
+									map[0].layer[2]);
+						} else {
+							batch.draw(tiles()[id], 16 * i + 16, 16 * j + 5 + 16);
+						}
+				}
+
+			}
+			batch.setColor(c);
+			if (layer == -1) {
+				for (int i = 0; i < map[0].width; ++i) {
+					for (int j = 0; j < map[0].height; ++j) {
+						int id = map[0].top[i][j];
+						if ((i != tx / 16 || j != ty / 16) || layer != -1)
+							if (id > 0 && id <= 7 && map[0].tileset.autotiles[id - 1] != null) {
+								map[0].tileset.autotiles[id - 1].render(batch, i, j, map[0].width, map[0].height, id,
+										map[0].top);
+
+							} else {
+								batch.draw(tiles()[id], 16 * i + 16, 16 * j + 5 + 16);
+							}
+					}
+				}
+			}
+
 		}
 
 		batch.draw(windows, 0, 0);
@@ -517,14 +713,20 @@ public class ScreenEditor extends Screen {
 				batch.draw(selector2, 48, Screen.Height + 20 + 32);
 			} else if (layer == 1) {
 				batch.draw(selector2, 48 + 24, Screen.Height + 20 + 32);
+			} else if (layer == 2) {
+				batch.draw(selector2, 48 + 48, Screen.Height + 20 + 32);
+			} else if (layer == -1) {
+				batch.draw(selector2, 48 + 48 + 24, Screen.Height + 20 + 32);
+			} else if (layer == -2) {
+				batch.draw(selector2, 48 + 48 + 48, Screen.Height + 20 + 32);
 			}
 
 			if (tool == 1) {
-				batch.draw(selector2, 48 + 48, Screen.Height + 20 + 32);
+				batch.draw(selector2, 48 + 48 + 48 + 48, Screen.Height + 20 + 32);
 			} else if (tool == 2) {
-				batch.draw(selector2, 96 + 24, Screen.Height + 20 + 32);
+				batch.draw(selector2, 96 + 24 + 48 + 48, Screen.Height + 20 + 32);
 			} else if (tool == 3) {
-				batch.draw(selector2, 96 + 48, Screen.Height + 20 + 32);
+				batch.draw(selector2, 96 + 48 + 48 + 48, Screen.Height + 20 + 32);
 			}
 
 			c = batch.getColor();
@@ -534,9 +736,37 @@ public class ScreenEditor extends Screen {
 				tx = (map[0].width - 1) * 16;
 			if (ty >= map[0].height * 16)
 				ty = (map[0].height - 1) * 16;
-			if (!tile_selector) {
-				if (mx - 16 < Screen.Width && my - 16 < Screen.Height)
-					batch.draw(tiles()[index], tx + 16, ty + 5 + 16);
+			if (!tile_selector && layer >= -1) {
+				if (mx - 16 < Screen.Width && my - 16 < Screen.Height) {
+					int id = index;
+					int i = tx / 16;
+					int j = ty / 16;
+					if (i < 0)
+						i = 0;
+					if (j < 0)
+						j = 0;
+					if (id > 0 && id <= 7 && map[0].tileset.autotiles[id - 1] != null) {
+
+						if (layer < 0)
+							map[0].tileset.autotiles[id - 1].render(batch, i, j, map[0].width, map[0].height, id,
+									map[0].top);
+						else
+							map[0].tileset.autotiles[id - 1].render(batch, i, j, map[0].width, map[0].height, id,
+									map[0].layer[layer]);
+					} else {
+						if (indexT == null)
+							batch.draw(tiles()[index], tx + 16, ty + 5 + 16);
+						else
+							for (int i2 = 0; i2 < indexT.length; ++i2) {
+								for (int j2 = 0; j2 < indexT[i2].length; ++j2) {
+									int id2 = indexT[i2][j2];
+									if (tx + i2 * 16 < map[0].width * 16 && ty - j2 * 16 >= 0)
+										batch.draw(tiles()[id2], tx + 16 + 16 * i2, ty + 5 + 16 - 16 * j2);
+								}
+							}
+					}
+
+				}
 			}
 			batch.setColor(c);
 
@@ -564,10 +794,19 @@ public class ScreenEditor extends Screen {
 			for (int i = s; i < m; ++i) {
 				if (i < tiles().length)
 					if (tiles()[i] != null) {
-						batch.draw(tiles()[i], x, y);
-						if (index == i)
-							batch.draw(selector, x, y);
-
+						if (i >= 1 && i <= 7 && map[0].tileset.autotiles[i - 1] != null) {
+							map[0].tileset.autotiles[i - 1].render(batch, x, y);
+						} else
+							batch.draw(tiles()[i], x, y);
+						if (indexT == null) {
+							if (index == i) {
+								batch.draw(selector, x, y);
+							}
+						} else {
+							if (contains(indexT, i)) {
+								batch.draw(selector, x, y);
+							}
+						}
 						if (tile_editor_mode == 1) {
 							if (map[0].tileset.passability[i] == 0) {
 								batch.draw(circle, x, y);
@@ -602,6 +841,16 @@ public class ScreenEditor extends Screen {
 
 		}
 
+	}
+
+	private boolean contains(int[][] t, int id) {
+		for (int i = 0; i < t.length; ++i) {
+			for (int j = 0; j < t[i].length; ++j) {
+				if (t[i][j] == id)
+					return true;
+			}
+		}
+		return false;
 	}
 
 	private TextureRegion[] tiles(int i) {
