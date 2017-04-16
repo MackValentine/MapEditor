@@ -13,6 +13,8 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 import org.xmlpull.v1.XmlSerializer;
 
+import com.mapeditor.game.MapEditor;
+
 public class Tileset {
 	public String name;
 
@@ -22,6 +24,7 @@ public class Tileset {
 
 	public int max;
 
+	public String[] autotiles_name;
 	public Autotile[] autotiles;
 
 	public Tileset(String n, int l) {
@@ -33,33 +36,16 @@ public class Tileset {
 		region = new int[max];
 
 		autotiles = new Autotile[7];
-
-		autotiles = new Autotile[7];
-		try {
-			autotiles[0] = new Autotile("test2", 1);
-			autotiles[1] = new Autotile("water", 2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		autotiles_name = new String[7];
 	}
 
 	public Tileset(FileInputStream fh, String s) {
 		name = s;
-		Load(fh);
-
 		autotiles = new Autotile[7];
+		autotiles_name = new String[7];
 
-		autotiles = new Autotile[7];
-		try {
-			autotiles[0] = new Autotile("test2", 1);
-			autotiles[1] = new Autotile("water", 2);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		Load(fh, true);
+
 	}
 
 	public boolean Save() {
@@ -74,7 +60,7 @@ public class Tileset {
 			int i = 0;
 			do {
 				filename = "new" + (i++);
-				f = new File("data/tilesets/" + filename + ".xml");
+				f = new File(MapEditor.s + "/data/tilesets/" + filename + ".xml");
 
 			} while (f.exists());
 
@@ -90,7 +76,7 @@ public class Tileset {
 					.newInstance(System.getProperty(XmlPullParserFactory.PROPERTY_NAME), null);
 			writer = factory.newSerializer();
 
-			osw = new OutputStreamWriter(new FileOutputStream("data/tilesets/" + filename + ".xml"));
+			osw = new OutputStreamWriter(new FileOutputStream(MapEditor.s + "/data/tilesets/" + filename + ".xml"));
 			writer.setOutput(osw);
 			writer.startTag(NAMESPACE, "Tileset");
 			writer.attribute(NAMESPACE, "Name", filename);
@@ -104,6 +90,8 @@ public class Tileset {
 
 			writer.startTag(NAMESPACE, "tiles");
 			writer.attribute(NAMESPACE, "max", Integer.toString(max));
+
+			writer.attribute(NAMESPACE, "autotiles", t_to_s());
 
 			writer.attribute(NAMESPACE, "passability", p_to_s());
 			writer.attribute(NAMESPACE, "depth", d_to_s());
@@ -127,6 +115,17 @@ public class Tileset {
 			success = false;
 		}
 		return success;
+	}
+
+	private String t_to_s() {
+		String s = "";
+
+		for (int j = 0; j < 7; ++j) {
+			if (autotiles[j] != null)
+				s += autotiles[j].nomImage;
+			s += ";";
+		}
+		return s;
 	}
 
 	private String p_to_s() {
@@ -162,7 +161,7 @@ public class Tileset {
 		return s;
 	}
 
-	public boolean Load(FileInputStream fileHandle) {
+	public boolean Load(FileInputStream fileHandle, boolean load) {
 
 		boolean success = true;
 		MXParser reader = null;
@@ -178,7 +177,6 @@ public class Tileset {
 					String s = reader.getAttributeName(i);
 					if (s.equals("name")) {
 						name = reader.getAttributeValue(i);
-						System.out.println(name);
 					}
 				}
 			}
@@ -222,6 +220,16 @@ public class Tileset {
 									region[j] = Integer.valueOf(m2[j]);
 								}
 							}
+							if (s.equals("autotiles")) {
+
+								String m = reader.getAttributeValue(i);
+								String[] m2 = m.split(";");
+								for (int j = 0; j < m2.length; ++j) {
+									// autotiles[j] = new Autotile(m2[j], j +
+									// 1);
+									autotiles_name[j] = m2[j];
+								}
+							}
 
 						}
 					}
@@ -234,6 +242,20 @@ public class Tileset {
 		} finally {
 
 		}
+
+		if (load)
+			for (int j = 0; j < 7; ++j) {
+				if (autotiles_name[j] != null)
+					autotiles[j] = new Autotile(autotiles_name[j], j + 1);
+			}
 		return success;
+	}
+
+	public void dispose() {
+		for (int i = 0; i < 7; ++i) {
+			if (autotiles[i] != null)
+				autotiles[i].dispose();
+		}
+
 	}
 }

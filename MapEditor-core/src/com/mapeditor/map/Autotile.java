@@ -6,6 +6,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.mapeditor.game.MapEditor;
 import com.mapeditor.screen.ScreenEditor;
 
 /**
@@ -130,6 +131,7 @@ public class Autotile {
 	public ArrayList<Integer> cousins;
 	private Texture[][][] textures;
 	private Pixmap pix;
+	private Texture texTest;
 
 	/**
 	 * Constructeur explicite
@@ -151,28 +153,18 @@ public class Autotile {
 	 * @throws IOException
 	 *             impossible de charger l'image de l'Autotile
 	 */
-	public Autotile(String string, int i) throws IOException {
+	public Autotile(String string, int i) {
 		this.numero = i;
 
 		this.nomImage = string;
 
-		pix = new Pixmap(Gdx.files.local("autotiles/" + string + ".png"));
+		pix = new Pixmap(Files.get("/autotiles/" + string + ".png"));
 
 		final int largeurAutotile = pix.getWidth();
 		if (largeurAutotile == LARGEUR_AUTOTILE_FIXE) {
 			this.anime = false;
 		} else if (largeurAutotile == LARGEUR_AUTOTILE_ANIME) {
 			this.anime = true;
-		} else {
-			// LOG.error("L'Autotile "+nomImage+" n'a pas la bonne largeur :
-			// "+largeurAutotile);
-			throw new IOException();
-		}
-		final int hauteurAutotile = pix.getHeight();
-		if (hauteurAutotile != HAUTEUR_AUTOTILE) {
-			// LOG.error("L'Autotile "+nomImage+" n'a pas la bonne hauteur :
-			// "+hauteurAutotile);
-			throw new IOException();
 		}
 
 		cousins = new ArrayList<Integer>();
@@ -619,7 +611,6 @@ public class Autotile {
 	public void render(SpriteBatch batch, int x, int y, int w, int h, int n, int[][] l) {
 
 		if (Map.needRefresh) {
-			//System.out.println("AZE");
 			textures[x][y] = calculerAutotile(x, y, w, h, n, l);
 		}
 
@@ -649,10 +640,31 @@ public class Autotile {
 
 		p.drawPixmap(pix, 0, 0, 0, 0, TAILLE_MORCEAU * 4, TAILLE_MORCEAU * 4);
 
-		Texture t = new Texture(p);
+		if (texTest != null) {
+			texTest.dispose();
+		}
 
-		batch.draw(t, i, j);
+		texTest = new Texture(p);
 
+		batch.draw(texTest, i, j);
+
+		p.dispose();
+		// t.dispose();
+
+	}
+
+	public void dispose() {
+		if (texTest != null) {
+			texTest.dispose();
+		}
+
+		for (int i = 0; i < textures.length; ++i) {
+			for (int j = 0; j < textures[i].length; ++j) {
+				for (int k = 0; k < textures[i][j].length; ++k) {
+					textures[i][j][k].dispose();
+				}
+			}
+		}
 	}
 
 }

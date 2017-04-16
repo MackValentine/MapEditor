@@ -42,7 +42,7 @@ public class FileOppener extends JDialog implements ActionListener {
 		type = s;
 
 		this.setResizable(false);
-		this.setTitle("Open map");
+		this.setTitle("Open");
 		this.setSize(240, 320);
 		this.setLocationRelativeTo(null);
 		this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -54,11 +54,19 @@ public class FileOppener extends JDialog implements ActionListener {
 		File dir;
 
 		if (type == "tiles")
-			dir = new File(".\\data\\tilesets");
+			dir = new File(MapEditor.s + "\\data\\tilesets");
 		else if (type == "tileset")
-			dir = new File(".\\tilesets");
+			dir = new File(MapEditor.s + "\\tilesets");
+		else if (type == "faces")
+			dir = new File(MapEditor.s + "\\cinematics\\faces");
+		else if (type == "charaset")
+			dir = new File(MapEditor.s + "\\characters");
+		else if (type == "autotiles")
+			dir = new File(MapEditor.s + "\\autotiles");
+		else if (type == "cinematics_back")
+			dir = new File(MapEditor.s + "\\cinematics");
 		else
-			dir = new File(".\\data\\maps");
+			dir = new File(MapEditor.s + "\\data\\maps");
 
 		File[] ft = dir.listFiles();
 
@@ -67,6 +75,10 @@ public class FileOppener extends JDialog implements ActionListener {
 		for (int i = 0; i < ft.length; ++i) {
 
 			if (type == "map") {
+				if (!ft[i].isFile()) {
+					list[i] = ft[i].getName();
+				}
+			} else if (type == "teleport") {
 				if (!ft[i].isFile()) {
 					list[i] = ft[i].getName();
 				}
@@ -126,11 +138,19 @@ public class FileOppener extends JDialog implements ActionListener {
 		if (fileName != null) {
 			FileHandle fileHandle;
 			if (type == "tiles")
-				fileHandle = new FileHandle("data/tilesets/" + fileName);
+				fileHandle = new FileHandle(MapEditor.s + "/data/tilesets/" + fileName);
 			else if (type == "tileset")
-				fileHandle = new FileHandle("tilesets/" + fileName);
+				fileHandle = new FileHandle(MapEditor.s + "/tilesets/" + fileName);
+			else if (type == "characters")
+				fileHandle = new FileHandle(MapEditor.s + "/characters/" + fileName);
+			else if (type == "faces")
+				fileHandle = new FileHandle(MapEditor.s + "/cinematics/faces/" + fileName);
+			else if (type == "cinematics_back")
+				fileHandle = new FileHandle(MapEditor.s + "/cinematics/" + fileName);
+			else if (type == "autotiles")
+				fileHandle = new FileHandle(MapEditor.s + "/autotiles/" + fileName);
 			else
-				fileHandle = new FileHandle("data/maps/" + fileName);
+				fileHandle = new FileHandle(MapEditor.s + "/data/maps/" + fileName);
 			fHandle = fileHandle;
 		}
 		// map.Load(fh);

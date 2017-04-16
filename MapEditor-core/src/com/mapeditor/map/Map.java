@@ -7,6 +7,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.GregorianCalendar;
 
 import org.xmlpull.mxp1.MXParser;
@@ -19,6 +20,7 @@ import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.mapeditor.game.MapEditor;
 
 public class Map {
 
@@ -43,7 +45,14 @@ public class Map {
 
 	public int[][] top;
 
+	public ArrayList<Event> events;
+
+	private boolean skipTileset;
+
 	public Map() throws FileNotFoundException {
+
+		events = new ArrayList<Event>();
+
 		width = 30;
 		height = 16;
 
@@ -54,7 +63,12 @@ public class Map {
 
 		loadTiles("tiles");
 
-		File dir2 = new File(".\\data\\tilesets\\" + "tiles" + ".xml");
+		File dir2 = new File(MapEditor.s + "\\data\\tilesets\\" + "tiles" + ".xml");
+		if (!dir2.exists()) {
+			tileset = new Tileset("tiles", tiles.length);
+			tileset.Save();
+		}
+
 		FileInputStream f = new FileInputStream(dir2);
 
 		tileset = new Tileset(f, "tiles");
@@ -65,12 +79,24 @@ public class Map {
 
 	public Map(String string) {
 
-		Load(Gdx.files.internal("data/maps/" + string));
+		events = new ArrayList<Event>();
+
+		Load(Files.get("/data/maps/" + string));
+
+	}
+
+	public Map(String string, boolean i) {
+
+		skipTileset = i;
+
+		events = new ArrayList<Event>();
+
+		Load(Files.get("/data/maps/" + string));
 
 	}
 
 	public void loadTiles(String s) {
-		tilesetR = new Texture(Gdx.files.local("tilesets/" + s + ".png"));
+		tilesetR = new Texture(Files.get("/tilesets/" + s + ".png"));
 		int w = tilesetR.getWidth() / 16;
 		int h = tilesetR.getHeight() / 16;
 		tiles = new TextureRegion[w * h];
@@ -110,8 +136,6 @@ public class Map {
 
 	public boolean Load(FileHandle fileHandle) {
 
-		
-		
 		boolean success = true;
 		MXParser reader = null;
 		try {
@@ -134,7 +158,7 @@ public class Map {
 
 			while (tag != XmlPullParser.END_DOCUMENT) {
 				if (tag == XmlPullParser.START_TAG) {
-					final String n = reader.getName();
+					String n = reader.getName();
 
 					if (n.equals("layers")) {
 						for (int i = 0; i < reader.getAttributeCount(); ++i) {
@@ -206,11 +230,75 @@ public class Map {
 							String s = reader.getAttributeName(i);
 							if (s.equals("name")) {
 								String m = reader.getAttributeValue(i);
-								loadTiles(reader.getAttributeValue(i));
-								tileset = new Tileset(m, tiles.length);
-								FileInputStream f = new FileInputStream("data/tilesets/" + tileset.name + ".xml");
-								tileset.Load(f);
+								if (!skipTileset) {
+									loadTiles(reader.getAttributeValue(i));
+									tileset = new Tileset(m, tiles.length);
+									FileInputStream f = new FileInputStream(
+											MapEditor.s + "/data/tilesets/" + tileset.name + ".xml");
+									tileset.Load(f, true);
+								} else {
+									tileset = new Tileset(m, 1);
+									FileInputStream f = new FileInputStream(
+											MapEditor.s + "/data/tilesets/" + tileset.name + ".xml");
+									tileset.Load(f, false);
+								}
 							}
+						}
+					} else if (n.equals("events")) {
+						int max = 0;
+						for (int i = 0; i < reader.getAttributeCount(); ++i) {
+							String s = reader.getAttributeName(i);
+							if (s.equals("n")) {
+								max = Integer.valueOf(reader.getAttributeValue(i));
+							}
+						}
+						for (int nb = 0; nb < max; ++nb) {
+							tag = reader.next();
+							n = reader.getName();
+							Event e = new Event();
+							for (int i = 0; i < reader.getAttributeCount(); ++i) {
+								String s = reader.getAttributeName(i);
+								if (s.equals("id")) {
+									e.id = Integer.valueOf(reader.getAttributeValue(i));
+								}
+								if (s.equals("type")) {
+									e.type = Integer.valueOf(reader.getAttributeValue(i));
+								}
+
+								if (s.equals("x")) {
+									e.x = Integer.valueOf(reader.getAttributeValue(i));
+								}
+								if (s.equals("y")) {
+									e.y = Integer.valueOf(reader.getAttributeValue(i));
+								}
+								if (s.equals("charas_name")) {
+									String ch = reader.getAttributeValue(i);
+									if (!ch.equals(""))
+										e.loadCharaset(ch);
+								}
+
+								if (s.equals("dest_x")) {
+									e.command.dest_x = Integer.valueOf(reader.getAttributeValue(i));
+								}
+								if (s.equals("dest_y")) {
+									e.command.dest_y = Integer.valueOf(reader.getAttributeValue(i));
+								}
+								if (s.equals("dest_name")) {
+									e.command.map_name = reader.getAttributeValue(i);
+								}
+								
+								if (s.equals("dialog")) {
+									e.command.dialog = reader.getAttributeValue(i);
+								}
+								if (s.equals("face")) {
+									e.command.face = reader.getAttributeValue(i);
+								}
+								if (s.equals("back")) {
+									e.command.back = reader.getAttributeValue(i);
+								}
+							}
+							events.add(e);
+							tag = reader.next();
 						}
 					}
 				}
@@ -222,7 +310,7 @@ public class Map {
 		} finally {
 
 		}
-		
+
 		needRefresh = true;
 		return success;
 	}
@@ -242,7 +330,7 @@ public class Map {
 				if (s != "")
 					s += "/";
 				filename = s + "map" + (i++) + ".xml";
-				f = new File("data/maps/" + filename);
+				f = new File(MapEditor.s + "/data/maps/" + filename);
 
 			} while (f.exists());
 
@@ -258,7 +346,10 @@ public class Map {
 					.newInstance(System.getProperty(XmlPullParserFactory.PROPERTY_NAME), null);
 			writer = factory.newSerializer();
 
-			osw = new OutputStreamWriter(new FileOutputStream("data/maps/" + filename));
+			File f = new File(MapEditor.s + "/data/maps/" + filename);
+
+			osw = new OutputStreamWriter(new FileOutputStream(f));
+
 			writer.setOutput(osw);
 			writer.startTag(NAMESPACE, "Map");
 			writer.attribute(NAMESPACE, "Name", filename);
@@ -289,6 +380,18 @@ public class Map {
 			writer.endTag(NAMESPACE, "layers");
 			if (indentation)
 				writer.text("\n");
+
+			writer.startTag(NAMESPACE, "events");
+			writer.attribute(NAMESPACE, "n", Integer.toString(events.size()));
+			for (Event e : events) {
+				writer.startTag(NAMESPACE, "event");
+				saveEvent(e, writer);
+				writer.endTag(NAMESPACE, "event");
+			}
+
+			writer.endTag(NAMESPACE, "events");
+			if (indentation)
+				writer.text("\n");
 			writer.endTag(NAMESPACE, "Map");
 			if (indentation)
 				writer.text("\n");
@@ -306,36 +409,41 @@ public class Map {
 		return success;
 	}
 
+	private void saveEvent(Event e, XmlSerializer writer)
+			throws IllegalArgumentException, IllegalStateException, IOException {
+		final String NAMESPACE = null;
+		writer.attribute(NAMESPACE, "id", String.valueOf(e.id));
+		writer.attribute(NAMESPACE, "type", String.valueOf(e.type));
+		writer.attribute(NAMESPACE, "x", String.valueOf(e.x));
+		writer.attribute(NAMESPACE, "y", String.valueOf(e.y));
+
+		writer.attribute(NAMESPACE, "charas_name", e.charaset_name);
+
+		if (e.type == 0) {
+			writer.attribute(NAMESPACE, "dest_x", String.valueOf(e.command.dest_x));
+			writer.attribute(NAMESPACE, "dest_y", String.valueOf(e.command.dest_y));
+			writer.attribute(NAMESPACE, "dest_name", e.command.map_name);
+		} else if (e.type == 3) {
+			writer.attribute(NAMESPACE, "dialog", e.command.dialog);
+			writer.attribute(NAMESPACE, "face", e.command.face);
+			writer.attribute(NAMESPACE, "back", e.command.back);
+		}
+
+	}
+
 	public void draw(SpriteBatch batch, int id, int i, int j, int m, int x, int y) {
 		if (id > 0 && id <= 7 && tileset.autotiles[id - 1] != null) {
-			int t[] = new int[8];
-
-			if (i + 1 < width)
-				t[0] = layer[m][i + 1][j];
-			if (i - 1 >= 0)
-				t[1] = layer[m][i - 1][j];
-
-			if (j + 1 < height)
-				t[2] = layer[m][i][j + 1];
-			if (j - 1 >= 0)
-				t[3] = layer[m][i][j - 1];
-
-			if (i + 1 < width && j + 1 < height)
-				t[4] = layer[m][i + 1][j + 1];
-			if (i + 1 < width && j - 1 >= 0)
-				t[5] = layer[m][i + 1][j - 1];
-
-			if (i - 1 >= 0 && j - 1 >= 0)
-				t[6] = layer[m][i - 1][j - 1];
-
-			if (i - 1 >= 0 && j + 1 < height)
-				t[7] = layer[m][i - 1][j + 1];
-			// tileset.autotiles[id - 1].render(batch, x, y, t);
-
-			tileset.autotiles[id - 1].render(batch, 16 * i + 16, 16 * j + 5 + 16, width, height, id, layer[m]);
+			tileset.autotiles[id - 1].render(batch, x, y);
 		} else {
 			batch.draw(tiles[id], x, y);
 		}
+	}
+
+	public void dispose() {
+		tileset.dispose();
+
+		tilesetR.dispose();
+
 	}
 
 }

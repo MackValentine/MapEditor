@@ -1,9 +1,16 @@
 package com.mapeditor.game;
 
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
@@ -17,6 +24,8 @@ public class MapEditor extends ApplicationAdapter {
 	Screen screen;
 	public static ScreenEditor editor;
 
+	public static String s;
+
 	public static boolean hasFocus = true;
 
 	@Override
@@ -26,6 +35,49 @@ public class MapEditor extends ApplicationAdapter {
 		shape = new ShapeRenderer();
 
 		Gdx.graphics.setWindowedMode((Screen.Width + 216 + 32) * 2, (Screen.Height + 48 + 32) * 2);
+
+		FileHandle fh = Gdx.files.local("config.cfg");
+
+		File f = fh.file();
+
+		if (!f.exists()) {
+			try {
+				f.createNewFile();
+				f.setWritable(true);
+				f.setReadable(true);
+
+				PrintWriter writer = new PrintWriter(f, "UTF-8");
+				writer.println("default_folder=.");
+
+				writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		try {
+			FileReader fr = new FileReader(f);
+			String line;
+			BufferedReader br = new BufferedReader(fr);
+			while ((line = br.readLine()) != null) {
+				if (line.contains("default_folder=")) {
+					s = line.replace("default_folder=", "");
+				}
+			}
+			br.close();
+			fr.close();
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
+		f = new File(MapEditor.s +"/data/tilesets/" + "" + ".xml");
 
 		try {
 			editor = new ScreenEditor();

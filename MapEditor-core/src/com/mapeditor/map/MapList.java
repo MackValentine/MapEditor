@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 
 import com.badlogic.gdx.files.FileHandle;
+import com.mapeditor.game.MapEditor;
 
 public class MapList {
 
@@ -17,7 +18,7 @@ public class MapList {
 
 	public MapList(String s) throws FileNotFoundException {
 		name = s;
-		File f = new File("data/maps/" + s);
+		File f = new File(MapEditor.s + "/data/maps/" + s);
 		if (!f.exists())
 			f.mkdirs();
 
@@ -36,7 +37,7 @@ public class MapList {
 		do {
 
 			filename = "new" + (i++);
-			f = new File("data/maps/" + filename);
+			f = new File(MapEditor.s + "/data/maps/" + filename);
 
 		} while (f.exists());
 
